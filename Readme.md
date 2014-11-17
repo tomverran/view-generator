@@ -59,12 +59,12 @@ class Page
 So in your MVC code instead of something awful like
 
 ```php
-$view->render('Page.phtml', ['heading' => 'how do you know this is needed', 'copyrightDate' => 'dull']);
+$view->render('Page.phtml', ['heading' => 'ugh so undocumented', 'copyrightDate' => 'pfft']);
 ```
 
 You can produce something a bit better like
 (I can't exactly show code completion, just imagine it)
 
 ```php
-$view->add( new Page( 'Wow, I know what variables this script needs!', 'Gosh I'm so happy' ) );
+$view->add( new Page( 'Wow, I know what variables this script needs!', 'Super' ) );
 ```
