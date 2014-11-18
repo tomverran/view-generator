@@ -129,7 +129,7 @@ class GenerateViews extends Command
 
         foreach( $lines as $lineNumber => $line ) {
             $matches = [];
-            preg_match_all( '/\$this->([A-Z0-9_]+)/i', $line, $matches );
+            preg_match_all( '/\$this->([A-Z0-9_]+)[^(]/i', $line, $matches );
             foreach ( $matches[1] as $variable ) {
                 if (!isset( $linesUsedByField[$variable])) {
                     $linesUsedByField[$variable] = [];
@@ -167,7 +167,7 @@ class GenerateViews extends Command
     {
         $buffer = [
             'ob_start();',
-            'require ' . $script . '";',
+            'require "' . $script . '";',
             'return ob_get_clean();'
         ];
         return implode( "\n", $buffer );
