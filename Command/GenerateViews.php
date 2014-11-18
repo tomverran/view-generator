@@ -39,12 +39,17 @@ class GenerateViews extends Command
 
         foreach( $paths as $path ) {
             $path = $this->realpath( $path );
-            $viewScripts = $this->findViewScripts( $path );
-            foreach ( $viewScripts as $containingFolder => $scripts ) {
-                $outPath = $this->realpath( $path . DIRECTORY_SEPARATOR . $outDir );
-                $output->writeln('writing scripts under ' . $path . ' to ' . $outPath );
-                $this->generateViewObjects( $outPath, $scripts );
+            $scripts = $this->findViewScripts( $path );
+
+            $outPath = $path . DIRECTORY_SEPARATOR . $outDir;
+            if ( !is_writable( $outPath ) ) {
+                mkdir( $outPath, 0775, true );
             }
+
+            $outPath = $this->realpath( $outPath );
+            $output->writeln('writing scripts under ' . $path . ' to ' . $outPath );
+            $this->generateViewObjects( $outPath, $scripts );
+
         }
     }
 
@@ -54,24 +59,14 @@ class GenerateViews extends Command
      */
     protected function findViewScripts( $from )
     {
-        $byContainingFolder = [];
+        $scripts = [];
         $directoryIterator = new RecursiveDirectoryIterator( $from );
-
         foreach ( new \RecursiveIteratorIterator( $directoryIterator ) as $file ) {
-            if ( strpos( $file->getFilename(), '.phtml' ) !== false ) {
-
-                $containingFolder = realpath( dirname( $file->getPathname() ) . '/../' );
-                $relativePath = str_replace( $containingFolder, '', $file->getPathname() );
-
-                if ( !isset( $byContainingFolder[$containingFolder] ) ) {
-                    $byContainingFolder[$containingFolder] = [];
-                }
-
-                $byContainingFolder[$containingFolder][] = $relativePath;
+            if ( substr( $file->getFilename(), -6 ) == '.phtml' ) {
+                $scripts[] = $file->getPathName();
             }
         }
-
-        return $byContainingFolder;
+        return $scripts;
     }
 
     /**
@@ -180,12 +175,12 @@ class GenerateViews extends Command
 
     /**
      * Generate view objects
-     * @param string $containingFolder Where to put the objects
+     * @param string $folder Where to put the objects
      * @param array $scripts An array of script paths relative to the directory
      */
-    private function generateViewObjects( $containingFolder, $scripts )
+    private function generateViewObjects( $folder, $scripts )
     {
-        $namespace = $this->getNamespaceFromPath( $containingFolder );
+        $namespace = $this->getNamespaceFromPath( $folder );
 
         //loop through scripts, gen classes
         foreach ( $scripts as $script ) {
@@ -193,7 +188,7 @@ class GenerateViews extends Command
             $className = $this->getClassNameFromPath( $script );
             $gen = new ClassGenerator( $className, $namespace, ClassGenerator::FLAG_FINAL );
             $gen->setDocBlock( new DocBlockGenerator( 'Generated on ' . date( 'd M Y' ) ) );
-            $fields = $this->getFieldsUsedInFile( $containingFolder . '/..' . $script );
+            $fields = $this->getFieldsUsedInFile( $script );
 
             foreach ( $fields as $field => $lines ) {
                 $gen->addProperty( $field, null, PropertyGenerator::FLAG_PRIVATE );
@@ -207,7 +202,7 @@ class GenerateViews extends Command
             $gen->addMethod('__toString', [], MethodGenerator::FLAG_PUBLIC, $viewRenderingCode, 'Render this script' );
 
             $withAnnoyingPhpTag = "<?php\n" . $gen->generate();
-            file_put_contents( $containingFolder . DIRECTORY_SEPARATOR . $className . '.php', $withAnnoyingPhpTag );
+            file_put_contents( $folder . DIRECTORY_SEPARATOR . $className . '.php', $withAnnoyingPhpTag );
         }
     }
 
