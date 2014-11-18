@@ -40,8 +40,18 @@ class GenerateViews extends Command
         foreach( $paths as $path ) {
             $viewScripts = $this->findViewScripts( $path );
             foreach ( $viewScripts as $containingFolder => $scripts ) {
-                $output->writeln('writing scripts under ' . $path . ' to ' . $inDir . DIRECTORY_SEPARATOR . $outDir );
-                $this->generateViewObjects( $inDir . DIRECTORY_SEPARATOR . $outDir, $scripts );
+
+                $path = realpath( $path );
+                $outPath = realpath( $path . DIRECTORY_SEPARATOR . $outDir );
+
+                if ( !$path || !$outPath ) {
+                    $whichOne = $path ? 'output' : 'input';
+                    $output->writeln( 'Bad ' . $whichOne . ' path given' );
+                    continue;
+                }
+
+                $output->writeln('writing scripts under ' . $path . ' to ' . $outPath );
+                $this->generateViewObjects( $outPath, $scripts );
             }
         }
     }

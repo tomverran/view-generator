@@ -1,5 +1,5 @@
 <?php
-namespace tomverran\Viewgen\Test\\View\;
+namespace tomverran\Viewgen\Test\View;
 
 /**
  * Generated on 18 Nov 2014
