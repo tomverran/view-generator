@@ -104,7 +104,7 @@ class GenerateViews extends Command
         foreach ( $this->getNamespaces() as $nsPath => $namespace ) {
             $path = str_replace( $nsPath, $namespace, $path );
         }
-        return str_replace( DIRECTORY_SEPARATOR, '\\', $path );
+        return ltrim( str_replace( DIRECTORY_SEPARATOR, '\\', $path ), '\\');
     }
 
     /**
