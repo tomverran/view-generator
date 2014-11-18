@@ -167,7 +167,7 @@ class GenerateViews extends Command
     {
         $buffer = [
             'ob_start();',
-            'require __DIR__ . "/..' . $script . '";',
+            'require ' . $script . '";',
             'return ob_get_clean();'
         ];
         return implode( "\n", $buffer );
