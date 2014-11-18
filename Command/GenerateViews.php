@@ -2,8 +2,11 @@
 namespace tomverran\Viewgen\Command;
 use RecursiveDirectoryIterator;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use tomverran\Viewgen\Library\DiskFileSystem;
+use tomverran\Viewgen\Library\PathExpander;
 use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\MethodGenerator;
@@ -21,15 +24,25 @@ class GenerateViews extends Command
     protected function configure()
     {
         $this->setName('generate-views')
-             ->setDescription('Generates objects for code completion view creation');
+             ->setDescription('Generates objects for code completion view creation')
+             ->addArgument('input', InputArgument::REQUIRED, 'Directories to find views in' )
+             ->addArgument('output', InputArgument::REQUIRED, 'Directories to place objects in, relative' );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $folder = 'View';
-        $viewScripts = $this->findViewScripts( getcwd() );
-        foreach ( $viewScripts as $containingFolder => $scripts ) {
-            $this->generateViewObjects( $containingFolder . DIRECTORY_SEPARATOR . $folder, $scripts );
+        $inDir = getcwd() . DIRECTORY_SEPARATOR . $input->getArgument( 'input' );
+        $outDir = $input->getArgument( 'output' );
+
+        //find every path to recurse down into, expanding wildcards
+        $paths = ( new PathExpander( new DiskFileSystem ) )->expand( $inDir );
+
+        foreach( $paths as $path ) {
+            $viewScripts = $this->findViewScripts( $path );
+            foreach ( $viewScripts as $containingFolder => $scripts ) {
+                $output->writeln('writing scripts under ' . $path . ' to ' . $inDir . DIRECTORY_SEPARATOR . $outDir );
+                $this->generateViewObjects( $inDir . DIRECTORY_SEPARATOR . $outDir, $scripts );
+            }
         }
     }
 

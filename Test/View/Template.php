@@ -1,8 +1,8 @@
 <?php
-namespace tomverran\Viewgen\Test\View;
+namespace tomverran\Viewgen\Test\\View\;
 
 /**
- * Generated on 17 Nov 2014
+ * Generated on 18 Nov 2014
  */
 class Template
 {
