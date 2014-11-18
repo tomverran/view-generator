@@ -38,18 +38,10 @@ class GenerateViews extends Command
         $paths = ( new PathExpander( new DiskFileSystem ) )->expand( $inDir );
 
         foreach( $paths as $path ) {
+            $path = $this->realpath( $path );
             $viewScripts = $this->findViewScripts( $path );
             foreach ( $viewScripts as $containingFolder => $scripts ) {
-
-                $path = realpath( $path );
-                $outPath = realpath( $path . DIRECTORY_SEPARATOR . $outDir );
-
-                if ( !$path || !$outPath ) {
-                    $whichOne = $path ? 'output' : 'input';
-                    $output->writeln( 'Bad ' . $whichOne . ' path given' );
-                    continue;
-                }
-
+                $outPath = $this->realpath( $path . DIRECTORY_SEPARATOR . $outDir );
                 $output->writeln('writing scripts under ' . $path . ' to ' . $outPath );
                 $this->generateViewObjects( $outPath, $scripts );
             }
@@ -217,5 +209,14 @@ class GenerateViews extends Command
             $withAnnoyingPhpTag = "<?php\n" . $gen->generate();
             file_put_contents( $containingFolder . DIRECTORY_SEPARATOR . $className . '.php', $withAnnoyingPhpTag );
         }
+    }
+
+    private function realpath($rawPath)
+    {
+        $out = realpath( $rawPath );
+        if ( !$out ) {
+            throw new \LogicException('Bad path: ' . $rawPath );
+        }
+        return $out;
     }
 } 
